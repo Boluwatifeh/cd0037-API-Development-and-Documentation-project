@@ -33,6 +33,13 @@ class TriviaTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
+    def test_endpoint_not_available(self):
+        test = self.client().get('/questions')
+        data = json.loads(test.data)
+        self.assertEqual(test.status_code, 404)
+        self.assertEqual(data['error'], 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Requested resource not  found')
 
 
 # Make the tests conveniently executable
