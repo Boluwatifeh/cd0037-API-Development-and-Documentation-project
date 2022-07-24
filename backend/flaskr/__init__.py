@@ -136,7 +136,7 @@ def create_app(test_config=None):
     Try using the word "title" to start.
     """
     
-    @app.route('/search-questions', methods=['GET'])
+    @app.route('/searchquestions', methods=['GET', 'POST'])
     def search_question():
         searched_term = request.get_json()['searchedTerm']
         questions = Question.query.filter(Question.question.ilike('%' + searched_term + '%')).all()
@@ -181,6 +181,35 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+
+    @app.route('/quizzes', methods=['POST'])
+    def get_quiz():
+        req_body = request.get_json()
+        if req_body is None:
+            abort(400)
+        previous_questions = req_body.get('previous_questions', None)
+        quiz_category = req_body.get('quiz_category', None)
+        if not previous_questions:
+            if quiz_category:
+                question_list = Question.query.filter(Question.category == (quiz_category['id'])).all()
+            else:
+                question_list = Question.query.all()
+        else:
+            if quiz_category:
+                question_list = Question.query.filter(Question.category == str(quiz_category['id'])).filter(Question.id.notin_(previous_questions)).all()
+            else:
+                question_list = Question.query.filter(Question.id.notin_(previous_questions)).all()
+
+        formatted_questions = [question.format() for question in question_list]
+        total = len(formatted_questions)
+        if total == 1:
+            random_question = formatted_questions[0]
+        else:
+            random_question = formatted_questions[random.randint(0, len(formatted_questions))]
+        return jsonify({
+                       'success': True,
+                       'question': random_question
+        })
 
     """
     @TODO:
