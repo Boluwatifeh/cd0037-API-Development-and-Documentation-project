@@ -34,10 +34,10 @@ def create_app(test_config=None):
     @app.route('/categories')
     def get_categories():
         categories = Category.query.all()
-        categories = [category.format() for category in categories]
+        formatted_categories = {category.id :category.type for category in categories}
         return jsonify({
                         'success': True,
-                        'categories': categories
+                        'categories': formatted_categories
                         })
 
     """
@@ -66,14 +66,15 @@ def create_app(test_config=None):
         paginated_questions = paginator_helper_function(request, questions)
         if len(paginated_questions) == 0:
             abort(404)
-        categories = [category.format() for category in Category.query.all()]
-        categories_list = [data['type'] for data in categories]
-        current_category = categories_list
+        categories = Category.query.all()
+        formatted_categories = {category.id :category.type for category in categories}
+        current_category = formatted_categories
         return jsonify({
+                        'success': True,
                         'questions': paginated_questions, 
                         'total_questions': len(questions),
                         'current_category': current_category, 
-                        'categories': categories_list
+                        'categories': formatted_categories
                         })
 
 
@@ -136,9 +137,9 @@ def create_app(test_config=None):
     Try using the word "title" to start.
     """
     
-    @app.route('/searchquestions', methods=['GET', 'POST'])
+    @app.route('/searchquestions', methods=['POST'])
     def search_question():
-        searched_term = request.get_json()['searchedTerm']
+        searched_term = request.get_json()['searchTerm']
         questions = Question.query.filter(Question.question.ilike('%' + searched_term + '%')).all()
         if questions:
             formatted_questions = [question.format() for question in questions]
@@ -163,7 +164,8 @@ def create_app(test_config=None):
         category = Category.query.get(category_id)
         if category is None:
             abort(404)
-        questions = (Question.query.filter(Question.category == str(category_id)).order_by(Question.id).all())
+        questions = (Question.query.filter(Question.category == str(category_id)) \
+            .order_by(Question.id).all())
         formatted_questions = paginator_helper_function(request, questions)
         return jsonify({'success': True, 
                         'questions': formatted_questions, 
