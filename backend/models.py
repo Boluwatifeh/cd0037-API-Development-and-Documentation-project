@@ -5,7 +5,7 @@ import json
 from settings import DB_NAME, DB_USER, DB_PASSWORD
 
 
-database_path = f"postgresql://postgres:{DB_PASSWORD}@localhost:5432/{DB_NAME}"
+database_path = f"postgresql://{DB_USER}:{DB_PASSWORD}@localhost:5432/{DB_NAME}"
 db = SQLAlchemy()
 
 """
