@@ -1,3 +1,4 @@
+from crypt import methods
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -159,18 +160,18 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
-    @app.route('/categories/<int:category_id>/questions')
+    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_question_by_category(category_id):
         category = Category.query.get(category_id)
         if category is None:
             abort(404)
-        questions = (Question.query.filter(Question.category == str(category_id)) \
-            .order_by(Question.id).all())
+        questions = Question.query.filter(Question.category == str(category_id)) \
+            .all()
         formatted_questions = paginator_helper_function(request, questions)
-        return jsonify({'success': True, 
+        return ( jsonify({'success': True, 
                         'questions': formatted_questions, 
                         'total_questions': len(questions),
-                        'current_category': category_id}, 200)
+                        'current_category': category.type}), 200)
 
     """
     @TODO:
