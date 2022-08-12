@@ -195,31 +195,36 @@ def create_app(test_config=None):
     @app.route('/quizzes', methods=['POST'])
     def get_quiz():
         req_body = request.get_json()
-        if req_body is None:
-            abort(400)
+        quiz_category = req_body.get('quiz_category',None)
         previous_questions = req_body.get('previous_questions', None)
-        quiz_category = req_body.get('quiz_category', None)
-        if not previous_questions:
-            if quiz_category:
-                question_list = Question.query.filter(Question.category == (quiz_category['id'])).all()
-            else:
-                question_list = Question.query.all()
-        else:
-            if quiz_category:
-                question_list = Question.query.filter(Question.category == str(quiz_category['id'])).filter(Question.id.notin_(previous_questions)).all()
-            else:
-                question_list = Question.query.filter(Question.id.notin_(previous_questions)).all()
 
-        formatted_questions = [question.format() for question in question_list]
-        total = len(formatted_questions)
-        if total == 1:
-            random_question = formatted_questions[0]
-        else:
-            random_question = formatted_questions[random.randint(0, len(formatted_questions))]
-        return jsonify({
-                       'success': True,
-                       'question': random_question
-        })
+        try:
+            if quiz_category.get('id') == 0: 
+                selection = Question.query.all()
+            else:
+                selection = Question.query.filter(Question.category == quiz_category.get('id')).all()
+                    
+            if selection is None or len(selection) == 0: 
+                return jsonify({
+                    'question': None
+                })  
+            questions= [question.format() for question in selection if question.id not in previous_questions] 
+            
+            if questions is None or len(questions) == 0: 
+                return jsonify({
+                    'question': None
+                }) 
+            else: 
+                question = random.choice(questions)
+            
+            return jsonify({
+                'success': True, 
+                'question': question
+            })
+            
+        except Exception as e:
+            abort(422)
+
 
     """
     @TODO:
