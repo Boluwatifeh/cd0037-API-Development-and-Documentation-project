@@ -140,18 +140,25 @@ def create_app(test_config=None):
     
     @app.route('/searchquestions', methods=['POST'])
     def search_question():
-        searched_term = request.get_json()['searchTerm']
+        body = request.get_json()
+        searched_term = body.get("searchTerm", None)
+        print(searched_term)
         questions = Question.query.filter(Question.question.ilike('%' + searched_term + '%')).all()
         if questions:
             formatted_questions = [question.format() for question in questions]
-            return jsonify({'question': formatted_questions,
-                            'total_question': len(formatted_questions),
-                            'current_category': questions[0].category,
-                            'success': True})
+            categories = Category.query.all()
+            index = formatted_questions[0]['category']
+            formatted_categories = {category.id :category.type for category in categories}
+            return (jsonify({
+                            'success': True,
+                            'questions': formatted_questions, 
+                            'totalQuestions': len(questions),
+                            'currentCategory': formatted_categories[index]
+                             }))
         else:
-            return jsonify({'message' :'No Result for searched question!', 
+            return (jsonify({'message' :'No Result for searched question!', 
                             'success':False},
-                            404)
+                            404) )
     """
     @TODO:
     Create a GET endpoint to get questions based on category.
